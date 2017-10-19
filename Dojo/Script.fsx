@@ -1,5 +1,5 @@
 ﻿#r "System.Xml.Linq.dll"
-#r "packages/FSharp.Data.2.2.5/lib/net40/FSharp.Data.dll"
+#r "./packages/FSharp.Data.2.2.5/lib/net40/FSharp.Data.dll"
 open FSharp.Data
 
 // ------------------------------------------------------------------
@@ -14,7 +14,27 @@ open FSharp.Data
 // Create connection to the WorldBank service
 let wb = WorldBankData.GetDataContext()
 // Get specific indicator for a specific country at a given year
-wb.Countries.``Czech Republic``.Indicators.``Population, ages 0-14 (% of total)``.[2000]
+// wb.Countries.``Czech Republic``.Indicators.``Population, ages 0-14 (% of total)``.[2000]
+
+for na in wb.Regions.``North America``.Countries do
+  printfn "%s" na.Name
+
+wb.Regions.``North America``.Countries |> Seq.iter(fun na -> printfn "%s" na.Name)
+wb.Regions.``North America``.Countries |> Seq.iter(printfn "%A")
+wb.Regions.``North America``.Countries |> Seq.map(fun na -> na.Name) |> Seq.iter(printfn "%s")
+
+wb.Regions.``North America``.Countries |> Seq.sortBy(fun na -> na.Indicators.``Life expectancy at birth, total (years)``.[2000])
+wb.Regions.``North America``.Countries 
+|> Seq.sortBy(fun na -> na.Indicators.``Life expectancy at birth, total (years)``.[2000]) 
+|> Seq.iter(fun na -> printfn "%A" na.Indicators.``Life expectancy at birth, total (years)``.[2000])
+
+let country =
+  wb.Regions.``North America``.Countries
+  |> Seq.sortBy(fun na -> na.Indicators.``Life expectancy at birth, total (years)``.[2000])
+  |> Seq.head
+
+country.Code |> Seq.take 2
+
 // Get a list of countries in a specified region
 for c in wb.Regions.``Euro area``.Countries do
   printfn "%s" c.Name
@@ -31,6 +51,18 @@ for c in wb.Regions.``Euro area``.Countries do
 type Sample = XmlProvider<"data/Writers.xml">
 // Load the sample document - explore properties using "doc."
 let doc = Sample.GetSample()
+
+type Bbc = XmlProvider<"data/bbc.xml">
+
+let bbcDoc = Bbc.GetSample()
+
+let title = 
+  bbcDoc.Channel.Items 
+    |> Seq.filter(fun i -> i.PubDate.Hour = 9 && i.PubDate.Minute = 5)
+    |> Seq.map (fun i -> i.Title)
+    |> Seq.head
+
+let lw = title.Split(' ') |> Seq.last
 
 // ------------------------------------------------------------------
 // WORD #3
